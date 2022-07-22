@@ -1,0 +1,41 @@
+## MUST EDIT ##
+
+
+## Editable ##
+dir_pcap: ${CONF_ABSPATH}/pcap
+dir_tmp: ${CONF_ABSPATH}/tmp
+dir_output: ${CONF_ABSPATH}/output
+requests_wait_time: 1
+get_full_replies_wait_time: 0.2
+response_status_code_error_threshold: 400
+
+
+## NOT Editable ##
+# directories
+conf_abspath: ${CONF_ABSPATH}
+dir_output: ${CONF_ABSPATH}/output
+dir_workspace: ${CONF_ABSPATH}/test/workspace
+
+# for development
+exec_env: "normal" # singleton, normal multi or spark
+loglevel: DEBUG # DEBUG, INFO, WARNING, ERROR, FATAL
+loglevel_to_stdout: WARNING # DEBUG, INFO, WARNING, ERROR, FATAL
+logdir: ${CONF_ABSPATH}/log
+logfile: log
+observer_stdout_main: True
+observer_stdout_website: True
+rotate_log_size: 1073741824 #1024*1024*1024B
+rotate_log_lines: 100000
+backup_log_count: 10
+max_filename_length: 50 # Byte
+default_char_code: "utf-8"
+# csv_char_code: "cp932"
+csv_char_code: "utf-8"
+tmp_filepath: ${CONF_ABSPATH}/test/workspace/tmp
+
+# for chrome-driver
+chrome_options: 
+  - "headless"
+  - "incognito"
+  - "window-size=1366,768"
+  - "autoplay-policy=no-user-gesture-required"
