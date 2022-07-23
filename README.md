@@ -27,7 +27,7 @@
 #### 実行2.保存したいグループの編集
   - lo_to_ba/output/joining_private_groups.csvを右クリック編集して保存したいグループのみに絞る
 
-### 実行3.グループのチャット等を保存*時間かかる
+#### 実行3.グループのチャット等を保存*時間かかる
 - ログインタイプに従って以下のどれかを実行する
   - python bin\lobi\save_private_group_chats.py --login_by twitter
   - python bin\lobi\save_private_group_chats.py --login_by lobi
