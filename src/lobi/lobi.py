@@ -306,7 +306,7 @@ class Lobi():
         #     if mode == "user" and user_id is not None and user_id in self.user_img_dict:
         #         return "pass"
         _, extension = os.path.splitext(url)
-        save_path = f"{base_dir}/{relative_path}.{extension}"
+        save_path = f"{base_dir}/{relative_path}{extension}"
         dir_save_path = os.path.basename(save_path)
         self.log.debug(f"save_path: {save_path}")
         if os.path.exists(save_path):
