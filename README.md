@@ -40,6 +40,23 @@
 - 「全て完了」と出た場合
   - lo_to_ba/output/[グループ名]以下に色々バックアップが取れている
 
+## 実行結果
+- 主な保存ファイルは「output/グループ名/chat_トムソンギルド会議3.json」  
+dictの主な構成要素は以下
+  - ["user"]["name"]  # 書き込みユーザー名
+  - ["user"]["icon_path"]  # ユーザーアイコン
+  - ["user"]["cover_path"]  # ユーザー背景
+  - ["message"]  # 投稿文章
+  - ["assets"][i]["saved_path"]  #投稿画像
+  - ["reply_to"]  # 新トピか返信か。nullなら新トピ
+  - ["created_date_jp"]  # 書き込み日本時刻
+  - ["full_replies"][j]  # 返信。dictの構成は上記と同じ
+- 画像はoutput/グループ名/img以下
+  - chat  # 書き込みに添付の画像
+  - group  # グループのアイコンと背景(あれば)
+  - user/cover  # ユーザーの背景
+  - user/icon  # ユーザーのアイコン
+
 ## 復元方法
 - まだ
 - 近いうちに
