@@ -6,7 +6,7 @@ dir_pcap: ${CONF_ABSPATH}/pcap
 dir_tmp: ${CONF_ABSPATH}/tmp
 dir_output: ${CONF_ABSPATH}/output
 requests_wait_time: 1
-get_full_replies_wait_time: 0.2
+get_full_replies_wait_time: 1
 response_status_code_error_threshold: 400
 
 
