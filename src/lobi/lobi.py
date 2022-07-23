@@ -13,6 +13,7 @@ import csv
 import json
 from datetime import datetime, timedelta, timezone
 import getpass
+import shutil
 
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../lib/util")
 from conf import Conf
@@ -116,6 +117,7 @@ class Lobi():
             csv_writer.writerow(["name", "total_users", "uid"])
             for group in groups.json()[0]["items"]:
                 csv_writer.writerow([self.replace_groupname_string(group["name"]), group["total_users"], group["uid"]])
+        shutil.copyfile(f"{Conf.get('dir_output')}/{filename}.csv", f"{Conf.get('dir_output')}/original_{filename}.csv")
 
     @with_standard_log
     def load_private_group_json(self, filename="joining_private_groups"):
