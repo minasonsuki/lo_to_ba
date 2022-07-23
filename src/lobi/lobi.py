@@ -304,7 +304,7 @@ class Lobi():
             self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
             self.log.error("traceback:\n", stack_info=True, exc_info=True)
             raise e
-        except urllib.error.HTTPError as e:
+        except Exception as e:
             print(e, flush=True)
             self.log.error(f"ERROR: caught exception at {__class__.__name__}.{sys._getframe().f_code.co_name}")
             self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
