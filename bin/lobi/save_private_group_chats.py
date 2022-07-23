@@ -44,6 +44,15 @@ def main(timestamp, args):
         log.info(message)
         print(message, flush=True)
 
+        message = "ログインチェック"
+        log.info(message)
+        print(message, flush=True)
+        with Observer(stdout=True, message=message, log=log):
+            lobi.login_check()
+        message = f"{message} 完了"
+        log.info(message)
+        print(message, flush=True)
+
         message = "プライベートグループのリスト読み込み"
         log.info(message)
         print(message, flush=True)

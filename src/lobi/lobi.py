@@ -220,6 +220,10 @@ class Lobi():
                     id = asset_dict["id"]
                     asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
 
+            created_date = int(chat["created_date"])
+            created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
+            chat["created_date_jp"] = created_date_jp
+
             full_replies = requests.get(f"https://web.lobi.co/api/group/{group_uid}/chats/replies?to={chat['id']})", cookies=cookies)
             response_status_code = full_replies.status_code
             self.log.debug(f"response status_code[{response_status_code}]")
@@ -247,13 +251,13 @@ class Lobi():
                             url = asset_dict["raw_url"]
                             id = asset_dict["id"]
                             asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
+                    created_date = int(full_reply_dict["created_date"])
+                    created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
+                    full_reply_dict["created_date_jp"] = created_date_jp
 
             with codecs.open(chat_json_save_path, "a", encoding="utf-8", errors="ignore") as f:
                 json.dump(chat, f, indent=4, ensure_ascii=False)
 
-            created_date = int(chat["created_date"])
-            created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
-            chat["created_date_jp"] = created_date_jp
             last_id = chat["id"]
             index += 1
 
