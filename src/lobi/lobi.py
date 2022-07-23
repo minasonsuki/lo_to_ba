@@ -253,7 +253,7 @@ class Lobi():
 
             created_date = int(chat["created_date"])
             created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
-            chat["created_date"] = created_date_jp
+            chat["created_date_jp"] = created_date_jp
             last_id = chat["id"]
             index += 1
 
