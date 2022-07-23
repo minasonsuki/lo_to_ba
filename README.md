@@ -11,8 +11,8 @@
   - pip install chromedriver-binary==103.0.5060.53.0  
     - PCにインストールされているgoogle chromeのバージョンと合わせる必要あり
 
-## 実行
-### 実行1.参加しているプライベートグループリストを作成
+## 実行手順
+### 手順1.参加しているプライベートグループリストを作成
 - ログインタイプに従って以下のどれかを実行する
   - python bin\lobi\create_private_group_list.py --login_by twitter
     - 20秒弱かかる
@@ -30,10 +30,10 @@
     - lo_to_ba/output/joining_private_groups.json
       - 参加しているグループメタ情報
 
-### 実行2.保存したいグループの編集
+### 手順2.保存したいグループの編集
   - lo_to_ba/output/joining_private_groups.csvを右クリック編集して保存したいグループのみに絞る
 
-### 実行3.グループのチャット等を保存*時間かかる
+### 手順3.グループのチャット等を保存*時間かかる
 - ログインタイプに従って以下のどれかを実行する
   - python bin\lobi\save_private_group_chats.py --login_by twitter
   - python bin\lobi\save_private_group_chats.py --login_by lobi
@@ -76,12 +76,14 @@ lo_to_ba/log/log
   - cd /d lo_to_ba
     - パスの指定は自分の環境次第
   - conda activate lo_to_ba_py39  
+  - 手順3を実行
 
 ### 途中から再開したい場合
-lo_to_ba/output/joining_private_groups.csvをメモ帳などで編集し、既に保存が完了しているグループの行を削除
+- lo_to_ba/output/joining_private_groups.csvをメモ帳などで編集し、既に保存が完了しているグループの行を削除
+- 手順3を実行
 
 ### 途中で止めたい場合
-Anaconda Promptで「Ctrl + c」
+- Anaconda Promptで「Ctrl + c」
 
 ### 意味不明のエラーが出た場合
 requestsのretry機能実装してないせいかも。もう一回やればうまくいくかも。
