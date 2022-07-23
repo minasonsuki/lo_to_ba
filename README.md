@@ -1,11 +1,10 @@
 # 取扱説明書
 ## 事前準備
-- リポジトリをクローン(下記URLの右上あたりにある緑の「Code」ボタン押して「Download ZIP」するなど)
-  - https://github.com/minasonsuki/lo_to_ba
+- リポジトリをクローン(このページの右上あたりにある緑の「Code」ボタン押して「Download ZIP」するなど)
 - Anacondaのインストール(「anaconda python」とかで検索)
 - Anaconda Promptを開き、以下コマンドを実行
   - cd /d lo_to_ba
-    - パスの指定は自分の環境次第
+    - パスの指定は自分の環境次第(lo_to_ba-masterとか)
   - conda create -y -n lo_to_ba_py39 -c conda-forge python=3.9 --file requirements.txt
     - Anaconda Promptへのペーストは「Shift + insert」
   - conda activate lo_to_ba_py39  
@@ -25,7 +24,11 @@
 - 「全て完了」と出た場合
   - 以下2つのファイルができている
     - lo_to_ba/output/joining_private_groups.csv
+      - 参加しているグループ一覧、編集用
+    - lo_to_ba/output/original_joining_private_groups.csv
+      - 参加しているグループ一覧、閲覧用
     - lo_to_ba/output/joining_private_groups.json
+      - 参加しているグループメタ情報
 
 ### 実行2.保存したいグループの編集
   - lo_to_ba/output/joining_private_groups.csvを右クリック編集して保存したいグループのみに絞る
