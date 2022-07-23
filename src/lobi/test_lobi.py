@@ -55,17 +55,6 @@ class TemplateTest(unittest.TestCase):
         print(f"before: {string}")
         print(f"after: {self.lobi.replace_dirname_string(string)}")
 
-    # @with_standard_log
-    # def test_save_lobi_user_icon(self):
-    #     url = "https://assets.nakamap.com/img/user/0dd17e7db69a0db26e1415e1e49df0c45751f78f_72.png"
-    #     user_id = "997083246946791424"
-    #     group_name = "トムソンギルド会議3"
-    #     save_path = f"{Conf.get('dir_output')}/{group_name}/img/icon/{user_id}{os.path.splitext(url)[1]}"
-
-    #     # result = self.nakamap.save_lobi_image(url, save_path=save_path, mode="user", user_id=user_id)
-    #     result = self.nakamap.save_lobi_image(url, save_path=save_path)
-    #     print(f"result: {result}")
-
     """
     @with_standard_log
     def test_(self):
