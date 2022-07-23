@@ -99,12 +99,14 @@ class Lobi():
     def create_private_group_list(self, filename="joining_private_groups", cookies=None):
         if cookies is None:
             cookies = self.cookies
-        groups = requests.get("https://web.lobi.co/api/groups?count=10000&page=1", cookies=cookies)
+        url = "https://web.lobi.co/api/groups?count=10000&page=1"
+        self.log.debug(f"requests.get({url}, cookies=cookies)")
+        groups = requests.get(url, cookies=cookies)
         response_status_code = groups.status_code
         self.log.debug(f"response status_code[{response_status_code}]")
         if response_status_code > Conf.get("response_status_code_error_threshold"):
             self.log.error(f"response status_code[{response_status_code}]")
-            self.log.error(f"url[https://web.lobi.co/api/groups?count=10000&page=1]")
+            self.log.error(f"url[{url}]")
 
         with codecs.open(f"{Conf.get('dir_output')}/{filename}.json", "w", encoding=Conf.get("default_char_code"), errors="replace") as f:
             json.dump(groups.json(), f, indent=4, ensure_ascii=False)
@@ -114,9 +116,6 @@ class Lobi():
             csv_writer.writerow(["name", "total_users", "uid"])
             for group in groups.json()[0]["items"]:
                 csv_writer.writerow([self.replace_groupname_string(group["name"]), group["total_users"], group["uid"]])
-            # f.write("name,total_users,uid\n")
-            # for group in groups.json()[0]["items"]:
-            #     f.write(f"{self.replace_groupname_string(group['name'])},{group['total_users']},{group['uid']}\n")
 
     @with_standard_log
     def load_private_group_json(self, filename="joining_private_groups"):
@@ -191,12 +190,14 @@ class Lobi():
         with codecs.open(chat_json_save_path, "w", encoding="utf-8", errors="ignore") as f:
             pass
 
-        chat_response = requests.get(f"https://web.lobi.co/api/group/{group_uid}/chats?count=30", cookies=cookies)
+        url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
+        self.log.debug(f"requests.get({url}, cookies=cookies)")
+        chat_response = requests.get(url, cookies=cookies)
         response_status_code = chat_response.status_code
         self.log.debug(f"response status_code[{response_status_code}]")
         if response_status_code > Conf.get("response_status_code_error_threshold"):
             self.log.error(f"response status_code[{response_status_code}]")
-            self.log.error(f"url[https://web.lobi.co/api/group/{group_uid}/chats?count=30]")
+            self.log.error(f"url[{url}]")
 
         self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
         sleep(Conf.get('requests_wait_time'))
@@ -224,12 +225,14 @@ class Lobi():
             created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
             chat["created_date_jp"] = created_date_jp
 
-            full_replies = requests.get(f"https://web.lobi.co/api/group/{group_uid}/chats/replies?to={chat['id']})", cookies=cookies)
+            url = f"https://web.lobi.co/api/group/{group_uid}/chats/replies?to={chat['id']})"
+            self.log.debug(f"requests.get({url}, cookies=cookies)")
+            full_replies = requests.get(url, cookies=cookies)
             response_status_code = full_replies.status_code
             self.log.debug(f"response status_code[{response_status_code}]")
             if response_status_code > Conf.get("response_status_code_error_threshold"):
                 self.log.error(f"response status_code[{response_status_code}]")
-                self.log.error(f"url[https://web.lobi.co/api/group/{group_uid}/chats/replies?to={chat['id']}")
+                self.log.error(f"url[{url}]")
 
             self.log.debug(f"sleep({Conf.get('get_full_replies_wait_time')})")
             sleep(Conf.get('get_full_replies_wait_time'))
@@ -268,12 +271,14 @@ class Lobi():
             chats_json_list.pop(0)
             if len(chats_json_list) == 0:
                 print("次の30件をロードしてキューに追加", flush=True)
-                chats = requests.get(f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}", cookies=cookies)
+                url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
+                self.log.debug(f"requests.get({url}, cookies=cookies)")
+                chats = requests.get(url, cookies=cookies)
                 response_status_code = chats.status_code
                 self.log.debug(f"response status_code[{response_status_code}]")
                 if response_status_code > Conf.get("response_status_code_error_threshold"):
                     self.log.error(f"response status_code[{response_status_code}]")
-                    self.log.error(f"url[https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}]")
+                    self.log.error(f"url[{url}]")
 
                 self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
                 sleep(Conf.get('requests_wait_time'))
@@ -283,6 +288,7 @@ class Lobi():
     @with_standard_log
     def download_file(self, url, dst_path):
         try:
+            self.log.debug(f"urllib.request.urlopen({url}")
             with urllib.request.urlopen(url) as web_file, open(dst_path, 'wb') as local_file:
                 local_file.write(web_file.read())
                 message = f"download[{dst_path}]"
@@ -292,6 +298,7 @@ class Lobi():
                 sleep(Conf.get('requests_wait_time'))
         except urllib.error.URLError as e:
             print(e, flush=True)
+            raise e
 
     @with_standard_log
     def save_lobi_image(self, url, base_dir, relative_path):
