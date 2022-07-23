@@ -290,23 +290,28 @@ class Lobi():
     @with_standard_log
     def download_file(self, url, dst_path):
         try:
+            message = f"download[{dst_path}]"
+            print(message, flush=True)
+            self.log.debug(message)
             self.log.debug(f"urllib.request.urlopen({url}")
             with urllib.request.urlopen(url) as web_file, open(dst_path, 'wb') as local_file:
                 local_file.write(web_file.read())
-                message = f"download[{dst_path}]"
-                print(message, flush=True)
-                self.log.debug(message)
-                self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
-                sleep(Conf.get('requests_wait_time'))
+                self.log.debug(f"sleep({Conf.get('download_file_wait_time')})")
+                sleep(Conf.get('download_file_wait_time'))
         except urllib.error.URLError as e:
             print(e, flush=True)
+            self.log.error(f"ERROR: caught exception at {__class__.__name__}.{sys._getframe().f_code.co_name}")
+            self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
+            self.log.error("traceback:\n", stack_info=True, exc_info=True)
             raise e
+        except urllib.error.HTTPError as e:
+            print(e, flush=True)
+            self.log.error(f"ERROR: caught exception at {__class__.__name__}.{sys._getframe().f_code.co_name}")
+            self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
+            self.log.error("traceback:\n", stack_info=True, exc_info=True)
 
     @with_standard_log
     def save_lobi_image(self, url, base_dir, relative_path):
-        # def save_lobi_image(self, url, save_path=None, mode="chat", user_id=None):
-        #     if mode == "user" and user_id is not None and user_id in self.user_img_dict:
-        #         return "pass"
         _, extension = os.path.splitext(url)
         save_path = f"{base_dir}/{relative_path}{extension}"
         dir_save_path = os.path.basename(save_path)
