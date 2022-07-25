@@ -24,7 +24,7 @@
   - python bin\lobi\create_private_group_list.py --login_by lobi
   - python bin\lobi\create_private_group_list.py --login_by lobi_unhidden
 - 実行すると以下を聞かれるので入力する
-  - ログイン情報の暗号化用パスワード(AES暗号化するため)(覚えておくこと)
+  - ログイン情報の暗号化用パスワード(AES暗号化するため)(覚えておくこと)(短めでOK)
   - ログイン情報の確認用パスワード
   - lobiまたはtwitterへのログインIDまたはemailアドレス
   - lobiまたはtwitterへのログインパスワード  
