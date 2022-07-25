@@ -20,6 +20,7 @@ from pathlib import Path
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../lib/util")
 from conf import Conf
 from log import Log, with_standard_log
+from observer import Observer
 from aes_cipher import AESCipher
 
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../src/twitter")
@@ -219,15 +220,21 @@ class Lobi():
         if not os.path.exists(chat_json_save_path):
             return False
 
-        with codecs.open(chat_json_save_path, "r", encoding=Conf.get("default_char_code"), errors="ignore") as f:
-            print(f"{chat_json_save_path} の読み込み")
-            chats = list(self.loads_chat_json(f.read()))
-        if len(chats) <= 1:
-            url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
-        else:
-            last_id = chats[-2]["id"]
-            url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
-        print(url)
+        message = f"{chat_json_save_path} の読み込み"
+        self.log.info(message)
+        print(message, flush=True)
+        with Observer(stdout=True, message=message, log=self.log):
+            with codecs.open(chat_json_save_path, "r", encoding=Conf.get("default_char_code"), errors="ignore") as f:
+                print()
+                chats = list(self.loads_chat_json(f.read()))
+            if len(chats) <= 1:
+                url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
+            else:
+                last_id = chats[-2]["id"]
+                url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
+        message = f"{message} 完了"
+        self.log.info(message)
+        print(message, flush=True)
 
         self.log.debug(f"requests.get({url}, cookies=cookies)")
         chats = requests.get(url, cookies=cookies)
