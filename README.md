@@ -12,8 +12,9 @@
   - conda create -y -n lo_to_ba_py39 -c conda-forge python=3.9 --file requirements.txt
     - Anaconda Promptへのペーストは「Shift + insert」
   - conda activate lo_to_ba_py39  
-  - pip install chromedriver-binary==103.0.5060.53.0  
+  - pip install chromedriver-binary==103.0.5060.134
     - PCにインストールされているgoogle chromeのバージョンと合わせる必要あり
+  - pip install pycryptodome
 
 ## 実行手順
 ### 手順1.参加しているプライベートグループリストを作成
@@ -22,6 +23,11 @@
     - 20秒弱かかる
   - python bin\lobi\create_private_group_list.py --login_by lobi
   - python bin\lobi\create_private_group_list.py --login_by lobi_unhidden
+- 実行すると以下を聞かれるので入力する
+  - ログイン情報の暗号化用パスワード(AES暗号化するため)(覚えておくこと)
+  - ログイン情報の確認用パスワード
+  - lobiまたはtwitterへのログインIDまたはemailアドレス
+  - lobiまたはtwitterへのログインパスワード  
 - 「ログイン失敗」と出た場合
   - 上記コマンドを正しくやり直す
   - パスワードのコピーペーストで失敗している可能性あるので直打ちもしてみる
