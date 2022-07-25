@@ -26,6 +26,7 @@
 - 実行すると以下を聞かれるので入力する
   - ログイン情報の暗号化用パスワード(AES暗号化するため)(覚えておくこと)(短めでOK)
   - ログイン情報の確認用パスワード
+    - 忘れたらlo_to_ba/certification/以下のファイルを削除してもう一度IDとパスワードを入力すればOK
   - lobiまたはtwitterへのログインIDまたはemailアドレス
   - lobiまたはtwitterへのログインパスワード  
 - 「ログイン失敗」と出た場合
@@ -48,13 +49,17 @@
   - python bin\lobi\save_private_group_chats.py --login_by twitter
   - python bin\lobi\save_private_group_chats.py --login_by lobi
   - python bin\lobi\save_private_group_chats.py --login_by lobi_unhidden
+- 実行すると以下を聞かれるので入力する
+  - ログイン情報の暗号化用パスワード(手順1で作成したもの)
+  - ログイン情報の確認用パスワード
+    - 忘れたらlo_to_ba/certification/以下のファイルを削除してもう一度IDとパスワードを入力すればOK
 - 「ログイン失敗」と出た場合
   - 上記コマンドを正しくやり直す
 - 「全て完了」と出た場合
   - lo_to_ba/output/[グループ名]以下に色々バックアップが取れている
 
 ## 実行結果
-- 主な保存ファイルは「output/グループ名/chat_トムソンギルド会議3.json」  
+- 主な保存ファイルは「output/グループ名/chat_[グループ名].json」  
 dictの主な構成要素は以下
   - ["user"]["name"]  # 書き込みユーザー名
   - ["user"]["icon_path"]  # ユーザーアイコン
