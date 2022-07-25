@@ -10,7 +10,6 @@ import chromedriver_binary
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from pathlib import Path
-import ast
 
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../lib/util")
 from conf import Conf
@@ -29,7 +28,7 @@ class Twitter():
         encrypted_file = Path(f"{Conf.get('dir_certification')}/{Conf.get('twitter_key_file')}")
         if not encrypted_file.parent.is_dir():
             os.makedirs(encrypted_file.parent, exist_ok=True)
-        encrypt_password = getpass.getpass('twitter情報の暗号化用パスワード(hidden)> ')
+        encrypt_password = getpass.getpass('twitterログイン情報の暗号化用パスワード(hidden)> ')
         confirm_password = getpass.getpass('確認(hidden)> ')
         if encrypt_password != confirm_password:
             print("パスワードが一致していません。プログラム終了")

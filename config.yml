@@ -5,9 +5,13 @@
 dir_pcap: ${CONF_ABSPATH}/pcap
 dir_tmp: ${CONF_ABSPATH}/tmp
 dir_output: ${CONF_ABSPATH}/output
+dir_certification: ${CONF_ABSPATH}/certification
+twitter_key_file: twitter_key
+lobi_key_file: lobi_key
 requests_wait_time: 1.1
 get_full_replies_wait_time: 1.1
 download_file_wait_time: 1.1
+max_requests_wait_time: 60
 
 response_status_code_error_threshold: 400
 
@@ -31,7 +35,6 @@ rotate_log_lines: 100000
 backup_log_count: 10
 max_filename_length: 50 # Byte
 default_char_code: "utf-8"
-# csv_char_code: "cp932"
 csv_char_code: "utf-8"
 tmp_filepath: ${CONF_ABSPATH}/test/workspace/tmp
 
