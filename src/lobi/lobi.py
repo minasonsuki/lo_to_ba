@@ -220,6 +220,7 @@ class Lobi():
             return False
 
         with codecs.open(chat_json_save_path, "r", encoding=Conf.get("default_char_code"), errors="ignore") as f:
+            print(f"{chat_json_save_path} の読み込み")
             chats = list(self.loads_chat_json(f.read()))
         if len(chats) <= 1:
             url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
