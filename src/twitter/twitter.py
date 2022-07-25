@@ -9,10 +9,13 @@ from selenium import webdriver
 import chromedriver_binary
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from pathlib import Path
+import ast
 
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../lib/util")
 from conf import Conf
 from log import Log, with_standard_log
+from aes_cipher import AESCipher
 
 
 class Twitter():
@@ -22,8 +25,28 @@ class Twitter():
         else:
             self.log = log
         self.log.debug(f"{__class__.__name__}.{sys._getframe().f_code.co_name} started.")
-        self.twitter_id = input('twitter id> ')
-        self.twitter_passwd = getpass.getpass('twitter passwd(hidden)> ')
+        self.cipher = AESCipher(log=self.log)
+        encrypted_file = Path(f"{Conf.get('dir_certification')}/{Conf.get('twitter_key_file')}")
+        if not encrypted_file.parent.is_dir():
+            os.makedirs(encrypted_file.parent, exist_ok=True)
+        encrypt_password = getpass.getpass('twitter情報の暗号化用パスワード(hidden)> ')
+        confirm_password = getpass.getpass('確認(hidden)> ')
+        if encrypt_password != confirm_password:
+            print("パスワードが一致していません。プログラム終了")
+            sys.exit(0)
+        if not encrypted_file.exists():
+            self.twitter_id = input('twitter id> ')
+            self.twitter_passwd = getpass.getpass('twitter passwd(hidden)> ')
+            data = {"twitter id": self.twitter_id, "twitter_passwd": self.twitter_passwd}
+            encrypted_data = self.cipher.encrypt(str(data), encrypt_password)
+            with open(encrypted_file, "wb") as f:
+                f.write(encrypted_data)
+        else:
+            with open(encrypted_file, "rb") as f:
+                decrypted_data = self.cipher.decrypt_from_file(encrypted_file, encrypt_password, data_format="JSON")
+            self.twitter_id = decrypted_data["twitter id"]
+            self.twitter_passwd = decrypted_data["twitter_passwd"]
+
         self.log.debug(f"{__class__.__name__}.{sys._getframe().f_code.co_name} finished.")
 
     @with_standard_log

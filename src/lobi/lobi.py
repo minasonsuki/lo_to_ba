@@ -11,13 +11,16 @@ import re
 import codecs
 import csv
 import json
+from json.decoder import WHITESPACE
 from datetime import datetime, timedelta, timezone
 import getpass
 import shutil
+from pathlib import Path
 
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../lib/util")
 from conf import Conf
 from log import Log, with_standard_log
+from aes_cipher import AESCipher
 
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../src/twitter")
 from twitter import Twitter
@@ -44,26 +47,34 @@ class Lobi():
         by : str, optional
             lobi or twitter
         """
-        if by == "lobi":
-            lobi_email = input('lobi e-mail addres> ')
-            lobi_passwd = getpass.getpass('lobi passwd(hidden)> ')
-
-            session = requests.Session()
-            lobi_login_url = "https://lobi.co/signin"
-            res = session.get(lobi_login_url)
-            soup = BeautifulSoup(res.text, features="html.parser")
-            csrf_token = soup.find(attrs={'name': 'csrf_token'}).get('value')
-            login_info = {
-                "csrf_token": csrf_token,
-                "email": lobi_email,
-                "password": lobi_passwd
-            }
-            session.post(lobi_login_url, data=login_info)
-            self.cookies = session.cookies
-            return self.cookies
-        if by == "lobi_unhidden":
-            lobi_email = input('lobi e-mail addres> ')
-            lobi_passwd = input('lobi passwd> ')
+        if by == "lobi" or by == "lobi_unhidden":
+            self.cipher = AESCipher(log=self.log)
+            encrypted_file = Path(f"{Conf.get('dir_certification')}/{Conf.get('lobi_key_file')}")
+            if not encrypted_file.parent.is_dir():
+                os.makedirs(encrypted_file.parent, exist_ok=True)
+            encrypt_password = getpass.getpass('lobiログイン情報の暗号化用パスワード(hidden)> ')
+            confirm_password = getpass.getpass('確認(hidden)> ')
+            if encrypt_password != confirm_password:
+                print("パスワードが一致していません。プログラム終了")
+                sys.exit(0)
+            if not encrypted_file.exists():
+                lobi_email = input('lobi e-mail addres> ')
+                if by == "lobi":
+                    lobi_passwd = getpass.getpass('lobi passwd(hidden)> ')
+                elif by == "lobi_unhidden":
+                    lobi_passwd = input('lobi passwd> ')
+                else:
+                    self.log.error("login_by not lobi nor lobi_unhidden")
+                    sys.exit(1)
+                data = {"lobi_e-mail_addres": lobi_email, "lobi_passwd": lobi_passwd}
+                encrypted_data = self.cipher.encrypt(str(data), encrypt_password)
+                with open(encrypted_file, "wb") as f:
+                    f.write(encrypted_data)
+            else:
+                with open(encrypted_file, "rb") as f:
+                    decrypted_data = self.cipher.decrypt_from_file(encrypted_file, encrypt_password, data_format="JSON")
+                lobi_email = decrypted_data["lobi_e-mail_addres"]
+                lobi_passwd = decrypted_data["lobi_passwd"]
 
             session = requests.Session()
             lobi_login_url = "https://lobi.co/signin"
@@ -112,7 +123,7 @@ class Lobi():
         with codecs.open(f"{Conf.get('dir_output')}/{filename}.json", "w", encoding=Conf.get("default_char_code"), errors="replace") as f:
             json.dump(groups.json(), f, indent=4, ensure_ascii=False)
 
-        with codecs.open(f"{Conf.get('dir_output')}/{filename}.csv", "w", encoding=Conf.get("csv_char_code"), errors="replace") as f:
+        with codecs.open(f"{Conf.get('dir_output')}/{filename}.csv", "w", encoding=Conf.get("csv_char_code"), errors="ignore") as f:
             csv_writer = csv.writer(f)
             csv_writer.writerow(["name", "total_users", "uid"])
             for group in groups.json()[0]["items"]:
@@ -180,22 +191,46 @@ class Lobi():
             url = group_dict["wallpaper"]
             group_dict["wallpaper_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", "img/group/wallpaper")
 
-        with codecs.open(f"{Conf.get('dir_output')}/{group_name_for_path}/meta_{group_name}.json", "w", encoding=Conf.get("default_char_code"), errors="replace") as f:
+        with codecs.open(f"{Conf.get('dir_output')}/{group_name_for_path}/meta_{group_name_for_path}.json", "w", encoding=Conf.get("default_char_code"), errors="replace") as f:
             json.dump(group_dict, f, indent=4, ensure_ascii=False)
 
     @with_standard_log
-    def get_all_chat_of_target_group(self, group_name, group_uid, cookies=None):
-        group_name_for_path = self.replace_dirname_string(group_name)
+    def loads_chat_json(self, string):
+        size = len(string)
+        decoder = json.JSONDecoder()
+
+        end = 0
+        while True:
+            index = WHITESPACE.match(string[end:]).end()
+            i = end + index
+            if i >= size:
+                break
+            ob, end = decoder.raw_decode(string, i)
+            yield ob
+
+    @with_standard_log
+    def load_target_private_group_chat_json(self, group_name, group_uid, cookies=None):
         if cookies is None:
             cookies = self.cookies
-        chat_json_save_path = f"{Conf.get('dir_output')}/{group_name_for_path}/chat_{group_name_for_path}.json"
-        with codecs.open(chat_json_save_path, "w", encoding="utf-8", errors="ignore") as f:
-            pass
 
-        url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
+        group_name_for_path = self.replace_dirname_string(group_name)
+        chat_json_save_path = f"{Conf.get('dir_output')}/{group_name_for_path}/chat_{group_name_for_path}.json"
+
+        if not os.path.exists(chat_json_save_path):
+            return False
+
+        with codecs.open(chat_json_save_path, "r", encoding=Conf.get("default_char_code"), errors="ignore") as f:
+            chats = list(self.loads_chat_json(f.read()))
+        if len(chats) <= 1:
+            url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
+        else:
+            last_id = chats[-2]["id"]
+            url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
+        print(url)
+
         self.log.debug(f"requests.get({url}, cookies=cookies)")
-        chat_response = requests.get(url, cookies=cookies)
-        response_status_code = chat_response.status_code
+        chats = requests.get(url, cookies=cookies)
+        response_status_code = chats.status_code
         self.log.debug(f"response status_code[{response_status_code}]")
         if response_status_code > Conf.get("response_status_code_error_threshold"):
             self.log.error(f"response status_code[{response_status_code}]")
@@ -203,9 +238,36 @@ class Lobi():
 
         self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
         sleep(Conf.get('requests_wait_time'))
-        chats_json_list = chat_response.json()
-        index = 0
+        return chats.json()
 
+    @with_standard_log
+    def get_all_chat_of_target_group(self, group_name, group_uid, cookies=None):
+        group_name_for_path = self.replace_dirname_string(group_name)
+        if cookies is None:
+            cookies = self.cookies
+        chat_json_save_path = f"{Conf.get('dir_output')}/{group_name_for_path}/chat_{group_name_for_path}.json"
+
+        chats_json_list = self.load_target_private_group_chat_json(group_name, group_uid, cookies=cookies)
+
+        if chats_json_list is False:  # 新規作成
+            with codecs.open(chat_json_save_path, "w", encoding=Conf.get("default_char_code"), errors="ignore") as f:
+                pass
+
+            url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
+            self.log.debug(f"requests.get({url}, cookies=cookies)")
+            chat_response = requests.get(url, cookies=cookies)
+            response_status_code = chat_response.status_code
+            self.log.debug(f"response status_code[{response_status_code}]")
+            if response_status_code > Conf.get("response_status_code_error_threshold"):
+                self.log.error(f"response status_code[{response_status_code}]")
+                self.log.error(f"url[{url}]")
+
+            self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
+            sleep(Conf.get('requests_wait_time'))
+
+            chats_json_list = chat_response.json()
+
+        index = 0
         while len(chats_json_list) > 0:
             chat = chats_json_list[0]
             if "user" in chat:
@@ -260,7 +322,7 @@ class Lobi():
                     created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
                     full_reply_dict["created_date_jp"] = created_date_jp
 
-            with codecs.open(chat_json_save_path, "a", encoding="utf-8", errors="ignore") as f:
+            with codecs.open(chat_json_save_path, "a", encoding=Conf.get("default_char_code"), errors="ignore") as f:
                 json.dump(chat, f, indent=4, ensure_ascii=False)
 
             last_id = chat["id"]
