@@ -7,22 +7,22 @@
 - リポジトリをクローン(このページの右上あたりにある緑の「Code」ボタン押して「Download ZIP」するなど)
 - Anacondaのインストール(「anaconda python」とかで検索)
 - Anaconda Promptを開き、以下コマンドを実行
-  - cd /d lo_to_ba
+  - `cd /d lo_to_ba`
     - パスの指定は自分の環境次第(lo_to_ba-masterとか)
-  - conda create -y -n lo_to_ba_py39 -c conda-forge python=3.9 --file requirements.txt
+  - `conda create -y -n lo_to_ba_py39 -c conda-forge python=3.9 --file requirements.txt`
     - Anaconda Promptへのペーストは「Shift + insert」
-  - conda activate lo_to_ba_py39  
-  - pip install chromedriver-binary==103.0.5060.134
+  - `conda activate lo_to_ba_py39`
+  - `pip install chromedriver-binary==103.0.5060.134`
     - PCにインストールされているgoogle chromeのバージョンと合わせる必要あり
-  - pip install pycryptodome
+  - `pip install pycryptodome`
 
 ## 実行手順
 ### 手順1.参加しているプライベートグループリストを作成
 - ログインタイプに従って以下のどれかを実行する
-  - python bin\lobi\create_private_group_list.py --login_by twitter
+  - `python bin\lobi\create_private_group_list.py --login_by twitter`
     - 20秒弱かかる
-  - python bin\lobi\create_private_group_list.py --login_by lobi
-  - python bin\lobi\create_private_group_list.py --login_by lobi_unhidden
+  - `python bin\lobi\create_private_group_list.py --login_by lobi`
+  - `python bin\lobi\create_private_group_list.py --login_by lobi_unhidden`
 - 実行すると以下を聞かれるので入力する
   - ログイン情報の暗号化用パスワード(AES暗号化するため)(覚えておくこと)(短めでOK)
   - ログイン情報の確認用パスワード
@@ -46,9 +46,9 @@
 
 ### 手順3.グループのチャット等を保存*時間かかる
 - ログインタイプに従って以下のどれかを実行する
-  - python bin\lobi\save_private_group_chats.py --login_by twitter
-  - python bin\lobi\save_private_group_chats.py --login_by lobi
-  - python bin\lobi\save_private_group_chats.py --login_by lobi_unhidden
+  - `python bin\lobi\save_private_group_chats.py --login_by twitter`
+  - `python bin\lobi\save_private_group_chats.py --login_by lobi`
+  - `python bin\lobi\save_private_group_chats.py --login_by lobi_unhidden`
 - 実行すると以下を聞かれるので入力する
   - ログイン情報の暗号化用パスワード(手順1で作成したもの)
   - ログイン情報の確認用パスワード
@@ -102,4 +102,21 @@ lo_to_ba/log/log
 - Anaconda Promptで「Ctrl + c」
 
 ### 意味不明のエラーが出た場合
-requestsのretry機能実装してないせいかも。もう一回やればうまくいくかも。
+- requestsのretry機能実装してないせいかも。
+- もう一回やればうまくいくかも。
+
+### 前回取得時からのアップデートを取得したいとき
+- 差分バックアップ機能は無い
+- lo_to_ba/outputのディレクトリ名を変更しバックアップ
+- 手順1から新規取得を開始する
+
+## 更新履歴
+### 2022/07/26
+- AES暗号化対応
+  - `pip install pycryptodome`が必要
+  - 初回起動時にログイン情報の暗号化用パスワード(短め)+ログイン情報の入力が必要
+  - 2回目以降はログイン情報の暗号化用パスワード(短め)のみでOK
+- グループ名等のエスケープ強化
+- ConnectionResetError対応
+  - requests_wait_timeを2倍にして待機後再度同じメソッドを実行
+  - max_requests_wait_time以上になるとraise eして終了

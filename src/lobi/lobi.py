@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 import getpass
 import shutil
 from pathlib import Path
+from requests.exceptions import ConnectionError
 
 sys.path.append(f"{os.path.dirname(os.path.abspath(__file__))}/../../lib/util")
 from conf import Conf
@@ -35,7 +36,7 @@ class Lobi():
             self.log = log
         self.log.debug(f"{__class__.__name__}.{sys._getframe().f_code.co_name} started.")
         # self.user_img_dict = {}
-        self.re_groupname = re.compile(r"\n|,|\\")
+        self.re_groupname = re.compile(r"\n|,|\\| |\?")
         self.re_dirname = re.compile(r"/|\*|\||\\|:|\"|\<|\>|\.|\?")
         self.log.debug(f"{__class__.__name__}.{sys._getframe().f_code.co_name} finished.")
 
@@ -210,61 +211,40 @@ class Lobi():
             yield ob
 
     @with_standard_log
-    def load_target_private_group_chat_json(self, group_name, group_uid, cookies=None):
-        if cookies is None:
-            cookies = self.cookies
+    def load_target_private_group_chat_json(self, group_name, group_uid, cookies=None, url=None, requests_wait_time="from_conf"):
+        try:
+            if cookies is None:
+                cookies = self.cookies
+            if requests_wait_time == "from_conf":
+                requests_wait_time = Conf.get("requests_wait_time")
 
-        group_name_for_path = self.replace_dirname_string(group_name)
-        chat_json_save_path = f"{Conf.get('dir_output')}/{group_name_for_path}/chat_{group_name_for_path}.json"
+            group_name_for_path = self.replace_dirname_string(group_name)
+            chat_json_save_path = f"{Conf.get('dir_output')}/{group_name_for_path}/chat_{group_name_for_path}.json"
 
-        if not os.path.exists(chat_json_save_path):
-            return False
+            if not os.path.exists(chat_json_save_path):
+                return False
 
-        message = f"{chat_json_save_path} の読み込み"
-        self.log.info(message)
-        print(message, flush=True)
-        with Observer(stdout=True, message=message, log=self.log):
-            with codecs.open(chat_json_save_path, "r", encoding=Conf.get("default_char_code"), errors="ignore") as f:
-                print()
-                chats = list(self.loads_chat_json(f.read()))
-            if len(chats) <= 1:
-                url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
-            else:
-                last_id = chats[-2]["id"]
-                url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
-        message = f"{message} 完了"
-        self.log.info(message)
-        print(message, flush=True)
+            message = f"{chat_json_save_path} の読み込み(時間かかる)"
+            self.log.info(message)
+            print(message, flush=True)
+            with Observer(stdout=True, message=message, log=self.log):
+                with codecs.open(chat_json_save_path, "r", encoding=Conf.get("default_char_code"), errors="ignore") as f:
+                    print()
+                    chats = list(self.loads_chat_json(f.read()))
+                if len(chats) <= 1:
+                    if url is None:
+                        url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
+                else:
+                    last_id = chats[-2]["id"]
+                    if url is None:
+                        url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
+            message = f"{message} 完了"
+            self.log.info(message)
+            print(message, flush=True)
 
-        self.log.debug(f"requests.get({url}, cookies=cookies)")
-        chats = requests.get(url, cookies=cookies)
-        response_status_code = chats.status_code
-        self.log.debug(f"response status_code[{response_status_code}]")
-        if response_status_code > Conf.get("response_status_code_error_threshold"):
-            self.log.error(f"response status_code[{response_status_code}]")
-            self.log.error(f"url[{url}]")
-
-        self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
-        sleep(Conf.get('requests_wait_time'))
-        return chats.json()
-
-    @with_standard_log
-    def get_all_chat_of_target_group(self, group_name, group_uid, cookies=None):
-        group_name_for_path = self.replace_dirname_string(group_name)
-        if cookies is None:
-            cookies = self.cookies
-        chat_json_save_path = f"{Conf.get('dir_output')}/{group_name_for_path}/chat_{group_name_for_path}.json"
-
-        chats_json_list = self.load_target_private_group_chat_json(group_name, group_uid, cookies=cookies)
-
-        if chats_json_list is False:  # 新規作成
-            with codecs.open(chat_json_save_path, "w", encoding=Conf.get("default_char_code"), errors="ignore") as f:
-                pass
-
-            url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
             self.log.debug(f"requests.get({url}, cookies=cookies)")
-            chat_response = requests.get(url, cookies=cookies)
-            response_status_code = chat_response.status_code
+            chats = requests.get(url, cookies=cookies)
+            response_status_code = chats.status_code
             self.log.debug(f"response status_code[{response_status_code}]")
             if response_status_code > Conf.get("response_status_code_error_threshold"):
                 self.log.error(f"response status_code[{response_status_code}]")
@@ -272,90 +252,154 @@ class Lobi():
 
             self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
             sleep(Conf.get('requests_wait_time'))
+            return chats.json()
+        except ConnectionResetError as e:
+            self.log.info(f"ERROR: caught exception at {__class__.__name__}.{sys._getframe().f_code.co_name}")
+            self.log.info("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
+            self.log.info("traceback:\n", stack_info=True, exc_info=True)
+            self.log.info(f"requests_wait_time[{requests_wait_time}], url[{url}]")
+            requests_wait_time = requests_wait_time * 2
+            self.log.info(f"next requests_wait_time is {requests_wait_time}")
+            if requests_wait_time > Conf.get("max_requests_wait_time"):
+                self.log.error(f"next requests_wait_time[{requests_wait_time}] > Conf.get('max_requests_wait_time')[{Conf.get('max_requests_wait_time')}]")
+                self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
+                self.log.error("traceback:\n", stack_info=True, exc_info=True)
+                raise e
+            message = f"再接続のため{requests_wait_time}秒待機"
+            sleep(requests_wait_time)
+            self.load_target_private_group_chat_json(group_name, group_uid, cookies=cookies, url=url, requests_wait_time=requests_wait_time)
 
-            chats_json_list = chat_response.json()
+    @with_standard_log
+    def get_all_chat_of_target_group(self, group_name, group_uid, cookies=None, url1=None, url2=None, url3=None, requests_wait_time="from_conf"):
+        try:
+            group_name_for_path = self.replace_dirname_string(group_name)
+            if cookies is None:
+                cookies = self.cookies
+            if requests_wait_time == "from_conf":
+                requests_wait_time = Conf.get("requests_wait_time")
 
-        index = 0
-        while len(chats_json_list) > 0:
-            chat = chats_json_list[0]
-            if "user" in chat:
-                if "icon" in chat["user"]:
-                    url = chat["user"]["icon"]
-                    user_uid = chat["user"]["uid"]
-                    chat["user"]["icon_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
-                if "cover" in chat["user"]:
-                    url = chat["user"]["cover"]
-                    user_uid = chat["user"]["uid"]
-                    chat["user"]["cover_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
-            if "assets" in chat:
-                for asset_dict in chat["assets"]:
-                    url = asset_dict["raw_url"]
-                    id = asset_dict["id"]
-                    asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
+            chat_json_save_path = f"{Conf.get('dir_output')}/{group_name_for_path}/chat_{group_name_for_path}.json"
 
-            created_date = int(chat["created_date"])
-            created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
-            chat["created_date_jp"] = created_date_jp
+            chats_json_list = self.load_target_private_group_chat_json(group_name, group_uid, cookies=cookies)
 
-            url = f"https://web.lobi.co/api/group/{group_uid}/chats/replies?to={chat['id']})"
-            self.log.debug(f"requests.get({url}, cookies=cookies)")
-            full_replies = requests.get(url, cookies=cookies)
-            response_status_code = full_replies.status_code
-            self.log.debug(f"response status_code[{response_status_code}]")
-            if response_status_code > Conf.get("response_status_code_error_threshold"):
-                self.log.error(f"response status_code[{response_status_code}]")
-                self.log.error(f"url[{url}]")
+            if chats_json_list is False:  # 新規作成
+                with codecs.open(chat_json_save_path, "w", encoding=Conf.get("default_char_code"), errors="ignore") as f:
+                    pass
 
-            self.log.debug(f"sleep({Conf.get('get_full_replies_wait_time')})")
-            sleep(Conf.get('get_full_replies_wait_time'))
-            self.log.debug(f"full_replies: {full_replies}")
-            if full_replies.status_code != 400:
-                chat["full_replies"] = full_replies.json()["chats"][::-1]
-                for full_reply_dict in chat["full_replies"]:
-                    if "user" in full_reply_dict:
-                        if "icon" in full_reply_dict["user"]:
-                            url = full_reply_dict["user"]["icon"]
-                            user_uid = full_reply_dict["user"]["uid"]
-                            full_reply_dict["user"]["icon_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
-                        if "cover" in full_reply_dict["user"]:
-                            url = full_reply_dict["user"]["cover"]
-                            user_uid = full_reply_dict["user"]["uid"]
-                            chat["user"]["cover_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
-                    if "assets" in full_reply_dict:
-                        for asset_dict in full_reply_dict["assets"]:
-                            url = asset_dict["raw_url"]
-                            id = asset_dict["id"]
-                            asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
-                    created_date = int(full_reply_dict["created_date"])
-                    created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
-                    full_reply_dict["created_date_jp"] = created_date_jp
-
-            with codecs.open(chat_json_save_path, "a", encoding=Conf.get("default_char_code"), errors="ignore") as f:
-                json.dump(chat, f, indent=4, ensure_ascii=False)
-
-            last_id = chat["id"]
-            index += 1
-
-            message = f"グループ[{group_name}]のチャット{index}件目({created_date_jp}投稿)取得完了。キュー残り{len(chats_json_list)}"
-            print(message, flush=True)
-            self.log.debug(message)
-
-            chats_json_list.pop(0)
-            if len(chats_json_list) == 0:
-                print("次の30件をロードしてキューに追加", flush=True)
-                url = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
-                self.log.debug(f"requests.get({url}, cookies=cookies)")
-                chats = requests.get(url, cookies=cookies)
-                response_status_code = chats.status_code
+                if url1 is None:
+                    url1 = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30"
+                self.log.debug(f"requests.get({url1}, cookies=cookies)")
+                chat_response = requests.get(url1, cookies=cookies)
+                response_status_code = chat_response.status_code
                 self.log.debug(f"response status_code[{response_status_code}]")
                 if response_status_code > Conf.get("response_status_code_error_threshold"):
                     self.log.error(f"response status_code[{response_status_code}]")
-                    self.log.error(f"url[{url}]")
+                    self.log.error(f"url[{url1}]")
 
                 self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
                 sleep(Conf.get('requests_wait_time'))
-                chats_json_list = chats.json()
-        print(f"{group_name} 取得完了", flush=True)
+
+                chats_json_list = chat_response.json()
+
+            index = 0
+            while len(chats_json_list) > 0:
+                chat = chats_json_list[0]
+                if "user" in chat:
+                    if "icon" in chat["user"]:
+                        url = chat["user"]["icon"]
+                        user_uid = chat["user"]["uid"]
+                        chat["user"]["icon_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
+                    if "cover" in chat["user"]:
+                        url = chat["user"]["cover"]
+                        user_uid = chat["user"]["uid"]
+                        chat["user"]["cover_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
+                if "assets" in chat:
+                    for asset_dict in chat["assets"]:
+                        url = asset_dict["raw_url"]
+                        id = asset_dict["id"]
+                        asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
+
+                created_date = int(chat["created_date"])
+                created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
+                chat["created_date_jp"] = created_date_jp
+
+                if url2 is None:
+                    url2 = f"https://web.lobi.co/api/group/{group_uid}/chats/replies?to={chat['id']})"
+                self.log.debug(f"requests.get({url2}, cookies=cookies)")
+                full_replies = requests.get(url2, cookies=cookies)
+                response_status_code = full_replies.status_code
+                self.log.debug(f"response status_code[{response_status_code}]")
+                if response_status_code > Conf.get("response_status_code_error_threshold"):
+                    self.log.error(f"response status_code[{response_status_code}]")
+                    self.log.error(f"url[{url2}]")
+
+                self.log.debug(f"sleep({Conf.get('get_full_replies_wait_time')})")
+                sleep(Conf.get('get_full_replies_wait_time'))
+                self.log.debug(f"full_replies: {full_replies}")
+                if full_replies.status_code != 400:
+                    chat["full_replies"] = full_replies.json()["chats"][::-1]
+                    for full_reply_dict in chat["full_replies"]:
+                        if "user" in full_reply_dict:
+                            if "icon" in full_reply_dict["user"]:
+                                url = full_reply_dict["user"]["icon"]
+                                user_uid = full_reply_dict["user"]["uid"]
+                                full_reply_dict["user"]["icon_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
+                            if "cover" in full_reply_dict["user"]:
+                                url = full_reply_dict["user"]["cover"]
+                                user_uid = full_reply_dict["user"]["uid"]
+                                chat["user"]["cover_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
+                        if "assets" in full_reply_dict:
+                            for asset_dict in full_reply_dict["assets"]:
+                                url = asset_dict["raw_url"]
+                                id = asset_dict["id"]
+                                asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
+                        created_date = int(full_reply_dict["created_date"])
+                        created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
+                        full_reply_dict["created_date_jp"] = created_date_jp
+
+                with codecs.open(chat_json_save_path, "a", encoding=Conf.get("default_char_code"), errors="ignore") as f:
+                    json.dump(chat, f, indent=4, ensure_ascii=False)
+
+                last_id = chat["id"]
+                index += 1
+
+                message = f"グループ[{group_name}]のチャット{index}件目({created_date_jp}投稿)取得完了。キュー残り{len(chats_json_list)}"
+                print(message, flush=True)
+                self.log.debug(message)
+
+                chats_json_list.pop(0)
+                if len(chats_json_list) == 0:
+                    print("次の30件をロードしてキューに追加", flush=True)
+                    if url3 is None:
+                        url3 = f"https://web.lobi.co/api/group/{group_uid}/chats?count=30&older_than={last_id}"
+                    self.log.debug(f"requests.get({url3}, cookies=cookies)")
+                    chats = requests.get(url3, cookies=cookies)
+                    response_status_code = chats.status_code
+                    self.log.debug(f"response status_code[{response_status_code}]")
+                    if response_status_code > Conf.get("response_status_code_error_threshold"):
+                        self.log.error(f"response status_code[{response_status_code}]")
+                        self.log.error(f"url[{url}]")
+
+                    self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
+                    sleep(Conf.get('requests_wait_time'))
+                    chats_json_list = chats.json()
+            print(f"{group_name} 取得完了", flush=True)
+
+        except ConnectionResetError as e:
+            self.log.info(f"ERROR: caught exception at {__class__.__name__}.{sys._getframe().f_code.co_name}")
+            self.log.info("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
+            self.log.info("traceback:\n", stack_info=True, exc_info=True)
+            self.log.info(f"requests_wait_time[{requests_wait_time}], url[{url}]")
+            requests_wait_time = requests_wait_time * 2
+            self.log.info(f"next requests_wait_time is {requests_wait_time}")
+            if requests_wait_time > Conf.get("max_requests_wait_time"):
+                self.log.error(f"next requests_wait_time[{requests_wait_time}] > Conf.get('max_requests_wait_time')[{Conf.get('max_requests_wait_time')}]")
+                self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
+                self.log.error("traceback:\n", stack_info=True, exc_info=True)
+                raise e
+            message = f"再接続のため{requests_wait_time}秒待機"
+            sleep(requests_wait_time)
+            self.get_all_chat_of_target_group(group_name, group_uid, cookies=cookies, url1=url1, url2=url2, url3=url3,  requests_wait_time=requests_wait_time)
 
     @with_standard_log
     def download_file(self, url, dst_path):
