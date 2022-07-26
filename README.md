@@ -126,3 +126,5 @@ lo_to_ba/log/log
 - ConnectionResetError対応
   - requests_wait_timeを2倍にして待機後再度同じメソッドを実行
   - max_requests_wait_time以上になるとraise eして終了
+- 比較的高速なリスタート機能追加
+  - chat_{group_name}.jsonの一番したのchatを読み込んでそこからリスタート
