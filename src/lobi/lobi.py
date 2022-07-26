@@ -294,7 +294,7 @@ class Lobi():
                 self.log.debug(f"response status_code[{response_status_code}]")
                 if response_status_code > Conf.get("response_status_code_error_threshold"):
                     self.log.error(f"response status_code[{response_status_code}]")
-                    self.log.error(f"url[{url1}]")
+                    self.log.error(f"url1[{url1}]")
 
                 self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
                 sleep(Conf.get('requests_wait_time'))
@@ -306,18 +306,18 @@ class Lobi():
                 chat = chats_json_list[0]
                 if "user" in chat:
                     if "icon" in chat["user"]:
-                        url = chat["user"]["icon"]
+                        image_url = chat["user"]["icon"]
                         user_uid = chat["user"]["uid"]
-                        chat["user"]["icon_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
+                        chat["user"]["icon_path"] = self.save_lobi_image(image_url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
                     if "cover" in chat["user"]:
-                        url = chat["user"]["cover"]
+                        image_url = chat["user"]["cover"]
                         user_uid = chat["user"]["uid"]
-                        chat["user"]["cover_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
+                        chat["user"]["cover_path"] = self.save_lobi_image(image_url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
                 if "assets" in chat:
                     for asset_dict in chat["assets"]:
-                        url = asset_dict["raw_url"]
+                        image_url = asset_dict["raw_url"]
                         id = asset_dict["id"]
-                        asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
+                        asset_dict["saved_path"] = self.save_lobi_image(image_url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
 
                 created_date = int(chat["created_date"])
                 created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
@@ -331,7 +331,8 @@ class Lobi():
                 self.log.debug(f"response status_code[{response_status_code}]")
                 if response_status_code > Conf.get("response_status_code_error_threshold"):
                     self.log.error(f"response status_code[{response_status_code}]")
-                    self.log.error(f"url[{url2}]")
+                    self.log.error(f"url2[{url2}]")
+                url2 = None
 
                 self.log.debug(f"sleep({Conf.get('get_full_replies_wait_time')})")
                 sleep(Conf.get('get_full_replies_wait_time'))
@@ -341,18 +342,18 @@ class Lobi():
                     for full_reply_dict in chat["full_replies"]:
                         if "user" in full_reply_dict:
                             if "icon" in full_reply_dict["user"]:
-                                url = full_reply_dict["user"]["icon"]
+                                image_url = full_reply_dict["user"]["icon"]
                                 user_uid = full_reply_dict["user"]["uid"]
-                                full_reply_dict["user"]["icon_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
+                                full_reply_dict["user"]["icon_path"] = self.save_lobi_image(image_url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/icon/{user_uid}")
                             if "cover" in full_reply_dict["user"]:
-                                url = full_reply_dict["user"]["cover"]
+                                image_url = full_reply_dict["user"]["cover"]
                                 user_uid = full_reply_dict["user"]["uid"]
-                                chat["user"]["cover_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
+                                chat["user"]["cover_path"] = self.save_lobi_image(image_url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/user/cover/{user_uid}")
                         if "assets" in full_reply_dict:
                             for asset_dict in full_reply_dict["assets"]:
-                                url = asset_dict["raw_url"]
+                                image_url = asset_dict["raw_url"]
                                 id = asset_dict["id"]
-                                asset_dict["saved_path"] = self.save_lobi_image(url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
+                                asset_dict["saved_path"] = self.save_lobi_image(image_url, f"{Conf.get('dir_output')}/{group_name_for_path}", f"img/chat/{id}")
                         created_date = int(full_reply_dict["created_date"])
                         created_date_jp = datetime.fromtimestamp(created_date, timezone(timedelta(hours=+9), 'JST')).strftime('%Y/%m/%d %H:%M:%S')
                         full_reply_dict["created_date_jp"] = created_date_jp
@@ -378,7 +379,8 @@ class Lobi():
                     self.log.debug(f"response status_code[{response_status_code}]")
                     if response_status_code > Conf.get("response_status_code_error_threshold"):
                         self.log.error(f"response status_code[{response_status_code}]")
-                        self.log.error(f"url[{url}]")
+                        self.log.error(f"url[{url3}]")
+                    url3 = None
 
                     self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
                     sleep(Conf.get('requests_wait_time'))
