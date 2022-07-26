@@ -253,7 +253,7 @@ class Lobi():
             self.log.debug(f"sleep({Conf.get('requests_wait_time')})")
             sleep(Conf.get('requests_wait_time'))
             return chats.json()
-        except ConnectionResetError as e:
+        except ConnectionError as e:
             self.log.info(f"ERROR: caught exception at {__class__.__name__}.{sys._getframe().f_code.co_name}")
             self.log.info("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
             self.log.info("traceback:\n", stack_info=True, exc_info=True)
@@ -265,6 +265,7 @@ class Lobi():
                 self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
                 self.log.error("traceback:\n", stack_info=True, exc_info=True)
                 raise e
+            requests.Session()
             message = f"再接続のため{requests_wait_time}秒待機"
             sleep(requests_wait_time)
             self.load_target_private_group_chat_json(group_name, group_uid, cookies=cookies, url=url, requests_wait_time=requests_wait_time)
@@ -387,11 +388,11 @@ class Lobi():
                     chats_json_list = chats.json()
             print(f"{group_name} 取得完了", flush=True)
 
-        except ConnectionResetError as e:
+        except ConnectionError as e:
             self.log.info(f"ERROR: caught exception at {__class__.__name__}.{sys._getframe().f_code.co_name}")
             self.log.info("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
             self.log.info("traceback:\n", stack_info=True, exc_info=True)
-            self.log.info(f"requests_wait_time[{requests_wait_time}], url[{url}]")
+            self.log.info(f"requests_wait_time[{requests_wait_time}], url1[{url1}], url2[{url2}], url3[{url3}]")
             requests_wait_time = requests_wait_time * 2
             self.log.info(f"next requests_wait_time is {requests_wait_time}")
             if requests_wait_time > Conf.get("max_requests_wait_time"):
@@ -399,6 +400,7 @@ class Lobi():
                 self.log.exception("[[" + e.__class__.__name__ + " EXCEPTION OCCURED]]: %s", e)
                 self.log.error("traceback:\n", stack_info=True, exc_info=True)
                 raise e
+            requests.Session()
             message = f"再接続のため{requests_wait_time}秒待機"
             sleep(requests_wait_time)
             self.get_all_chat_of_target_group(group_name, group_uid, cookies=cookies, url1=url1, url2=url2, url3=url3,  requests_wait_time=requests_wait_time)
