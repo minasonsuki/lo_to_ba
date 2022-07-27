@@ -5,7 +5,7 @@
 
 ## 事前準備
 - リポジトリをクローン
-  - このページの右上あたりにある緑の「Code」ボタン押して「Download ZIP」して解答するなど
+  - このページの右上あたりにある緑の「Code」ボタン押して「Download ZIP」して解凍するなど
 - Anacondaのインストール
   - 「anaconda python」とかで検索
 - Anaconda Promptを開き、以下コマンドを実行
