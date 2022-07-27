@@ -25,8 +25,7 @@ certification
 /log/*
 !/log/.gitkeep
 
-output
-output_full
+output*
 
 /src/*
 !/src/lobi/
