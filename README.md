@@ -4,11 +4,16 @@
 - その間パソコンつけっぱなしになります。
 
 ## 事前準備
-- リポジトリをクローン(このページの右上あたりにある緑の「Code」ボタン押して「Download ZIP」するなど)
-- Anacondaのインストール(「anaconda python」とかで検索)
+- リポジトリをクローン
+  - このページの右上あたりにある緑の「Code」ボタン押して「Download ZIP」して解答するなど
+- Anacondaのインストール
+  - 「anaconda python」とかで検索
 - Anaconda Promptを開き、以下コマンドを実行
   - `cd /d lo_to_ba`
     - パスの指定は自分の環境次第(lo_to_ba-masterとか)
+    - cdコマンドの使い方は「windows コマンドプロンプト cd」とかで検索
+      - https://www.javadrive.jp/command/dir/index3.html
+    - Anaconda Powershell Promptと紛らわしいので注意。Powershellって書いてない黒いアイコンのやつ。
   - `conda create -y -n lo_to_ba_py39 -c conda-forge python=3.9 --file requirements.txt`
     - Anaconda Promptへのペーストは「Shift + insert」
   - `conda activate lo_to_ba_py39`
@@ -24,14 +29,13 @@
   - `python bin\lobi\create_private_group_list.py --login_by lobi`
   - `python bin\lobi\create_private_group_list.py --login_by lobi_unhidden`
 - 実行すると以下を聞かれるので入力する
-  - ログイン情報の暗号化用パスワード(AES暗号化するため)(覚えておくこと)(短めでOK)
-  - ログイン情報の確認用パスワード
-    - 忘れたらlo_to_ba/certification/以下のファイルを削除してもう一度IDとパスワードを入力すればOK
+  - ログイン情報の暗号化用パスワードと確認用パスワード(AES暗号化するため)(覚えておくこと)(短めでOK)(2回同じ文字列を手打ちする)
   - lobiまたはtwitterへのログインIDまたはemailアドレス
   - lobiまたはtwitterへのログインパスワード  
+    - ログイン情報の暗号化用パスワードを忘れたらlo_to_ba/certification/以下のファイルを削除してもう一度ログインIDとパスワードを入力すればOK
 - 「ログイン失敗」と出た場合
   - 上記コマンドを正しくやり直す
-  - パスワードのコピーペーストで失敗している可能性あるので直打ちもしてみる
+  - パスワードのコピーペーストで失敗している可能性あるので手打ちもしてみる
 - 「全て完了」と出た場合
   - 以下2つのファイルができている
     - lo_to_ba/output/joining_private_groups.csv
@@ -42,7 +46,8 @@
       - 参加しているグループメタ情報
 
 ### 手順2.保存したいグループの編集
-  - lo_to_ba/output/joining_private_groups.csvを右クリック編集して保存したいグループのみに絞る
+  - lo_to_ba/output/joining_private_groups.csvをテキストエディタで編集して保存したいグループのみに絞る
+    - windowsの場合、右クリック編集でメモ帳で編集できる
 
 ### 手順3.グループのチャット等を保存*時間かかる
 - ログインタイプに従って以下のどれかを実行する
